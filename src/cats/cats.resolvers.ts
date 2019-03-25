@@ -1,5 +1,6 @@
 import { ParseIntPipe, UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver, Subscription, Info } from '@nestjs/graphql';
+import { PrismaService } from '../prisma/prisma.service';
 import { PubSub } from 'graphql-subscriptions';
 import { Cat } from '../graphql.schema';
 import { CatsGuard } from './cats.guard';
@@ -10,13 +11,20 @@ const pubSub = new PubSub();
 
 @Resolver('Cat')
 export class CatsResolvers {
-  constructor(private readonly catsService: CatsService) {}
+  constructor(
+    private readonly catsService: CatsService,
+    private readonly prisma: PrismaService) {}
+
+  // @Query()
+  // @UseGuards(CatsGuard)
+  //   async getCats() {
+  //     return await this.catsService.findAll();
+  //   }
 
   @Query()
-  @UseGuards(CatsGuard)
-    async getCats() {
-      return await this.catsService.findAll();
-    }
+  async getCats(@Args() Args, @Info() info): Promise<Cat[]> {
+    return await this.prisma.query.(args, info);
+  }
 
   @Query('cat')
   async findOneById(
